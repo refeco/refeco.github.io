@@ -12,9 +12,9 @@ Before proceed, I would recommend you to read the [contract ABI specification](h
 
 This repo has two main modules: `Encoder` and `Decoder`, let's give a try on some real world transactions to understand how they are intended to be used.
 
-While using e.g. `eth_call` or `eth_sendTransaction` you can use the field `data` to interact with contracts, the information needed in this field must be encoded following the [contract ABI specification](https://docs.soliditylang.org/en/v0.8.17/abi-spec.html)(if you want to interact with a contract, otherwise, you can pass any useful information to the data field), and this is exactly what this module does.
+While using e.g. `eth_call` or `eth_sendTransaction` you can use the field `data` to interact with contracts, the data in this field must be encoded following the [contract ABI specification](https://docs.soliditylang.org/en/v0.8.17/abi-spec.html) (if you are interacting with contracts), and this is exactly what this module does.
 
-# Sumary
+# Table of contents
 
 - [Encoding](#encoding)
 - [Decoding](#decoding)
@@ -103,39 +103,37 @@ say $encoded;
 
 As you can see, this one would be harder to handle even if you need to do this only once, let's break down the information related to this transaction:
 
-First as you can see etherscan shows this function signature as `fulfillBasicOrder(tuple parameters)` but this is only for better visualization, not everyone cares about this information, but that is no `tuple` type being interpreted here, basically when you give an `struct` all the fields from the `struct` will be added to the signature, so for sample if my `struct` has the field `address owner` the signature for this `tuple` would be `(address owner)`(tuples are identified as `(` for start and `)` for end) instead of just `tuple`.
+First as you can see etherscan shows this function signature as `fulfillBasicOrder(tuple parameters)` but this is only for better visualization, not everyone cares about this information, but that is no `tuple` type being interpreted here, basically when you give an `struct` as parameter for a solidity function, in the signature, all the fields from the `struct` must be informed, so for sample:
+
+for the following solidity function:
+
+{% highlight javascript %}
+struct Test {
+    uint256 a;
+    address b;
+}
+
+function runTest (Test calldata t) public view{}
+{% endhighlight %}
+
+The signature for the function `runTest` is `runTest((uint256,address))`, the extra parentheses are to identify the argument as a tuple.
 
 Now the encoded response:
 
 - `0xfb0f3ee1` - The first 4 bytes (without 0x) are related to the function signature: first four bytes from keccak256(signature)
-- `0000000000000000000000000000000000000000000000000000000000000020` dynamic tuple index
-- `0000000000000000000000000000000000000000000000000000000000000000` static address
-- `0000000000000000000000000000000000000000000000000000000000000000` static uint
-- `000000000000000000000000000000000000000000000000000a200f559c2000` static uint
-- `0000000000000000000000005e9988b0c47b47a5b1d7d2e65358789044c2ef9a` static address
-- `000000000000000000000000004c00500000ad104d7dbd00e3ae0a5c00560c00` static address
-- `0000000000000000000000002cc8342d7c8bff5a213eb2cde39de9a59b3461a7` static address
-- `000000000000000000000000000000000000000000000000000000000000b39d` static uint
-- `0000000000000000000000000000000000000000000000000000000000000001` static uint
-- `0000000000000000000000000000000000000000000000000000000000000002` static uint
-- `00000000000000000000000000000000000000000000000000000000633bf4a9` static uint
-- `000000000000000000000000000000000000000000000000000000006364b459` static uint
-- `0000000000000000000000000000000000000000000000000000000000000000` static bytes32
-- `360c6ebe0000000000000000000000000000000000000000a3d2067fd6a0483c` static uint
-- `0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000` static bytes32
-- `0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000` static bytes32
-- `0000000000000000000000000000000000000000000000000000000000000003` static uint
-- `0000000000000000000000000000000000000000000000000000000000000240` index dynamic tuple
-- `0000000000000000000000000000000000000000000000000000000000000320` index dynamic bytes
-- `0000000000000000000000000000000000000000000000000000000000000003` size tuple array
+- `0000000000000000000000000000000000000000000000000000000000000020` dynamic tuple index \
+**... skipping a bunch of static fields here since we have seen how they work in the previous example**
+- `0000000000000000000000000000000000000000000000000000000000000240` dynamic tuple index
+- `0000000000000000000000000000000000000000000000000000000000000320` dynamic bytes index
+- `0000000000000000000000000000000000000000000000000000000000000003` tuple array size
 - `000000000000000000000000000000000000000000000000000044364c5bb000` static uint
 - `0000000000000000000000000000a26b00c1f0df003000390027140000faa719` static address
 - `00000000000000000000000000000000000000000000000000001b48eb57e000` static uint
 - `0000000000000000000000002dc05e282a6829c66e91b655f91129800fb9dbdf` static address
 - `000000000000000000000000000000000000000000000000000028ed6103d000` static uint
 - `0000000000000000000000002a1de3f4582bb617225e32922ba789693156fc8c` static address
-- `0000000000000000000000000000000000000000000000000000000000000041` dynamic bytes size
-- `d410c95bb9d3f04cb0c2340a5fa890e506c2d9159aadd8bf06bcd03e56a9f48c` The dynamic bytes value has more than 32 bytes so it is break in 3 chunks of 32 bytes
+- `0000000000000000000000000000000000000000000000000000000000000041` bytes size
+- `d410c95bb9d3f04cb0c2340a5fa890e506c2d9159aadd8bf06bcd03e56a9f48c` the dynamic bytes value has more than 32 bytes so it is break in 3 chunks of 32 bytes
 - `44115a13a2f9fc6184cfe40747ebff2da100329aa385fa19de112ed2f3ed1173`
 - `1b00000000000000000000000000000000000000000000000000000000000000`
 
@@ -143,7 +141,7 @@ Bytes and strings are padded right while everything else is padded left.
 
 # Decoding
 
-For decoding the logic is the same as the encoding, the difference from the Encoder module is that for decoding you append only the type signatures to the module and pass the value to the decode function as the following example using the same call as the last encoding sample (without the function name):
+For decoding the logic is the same as the encoding, the difference from the Encoder module is that for decoding, you append only the type signatures to the module and pass the value to the decode function as the following example using the same call as the last encoding sample (without the function name):
 
 {% highlight perl %}
 my $decoded = $decoder->append(
@@ -175,7 +173,7 @@ say $decoded;
 # ... the result is long so I've just truncated it
 {% endhighlight %}
 
-Is also worth mention that the numeric values are returned always as Math::BigInt instances, in the future I may need to add the option of passing the arguments to the Encoder module as big int values as well, but for now it accepts only basic numeric types.
+Is also worth mention that the numeric values are returned always as Math::BigInt instances, and the encoder module also accepts Math::BigInt as input for the numeric type signatures.
 
 ## Using it
 
