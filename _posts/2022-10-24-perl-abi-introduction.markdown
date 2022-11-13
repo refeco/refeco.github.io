@@ -4,9 +4,9 @@ title:  "Solidity ABI argument encoding with Perl"
 date:   2022-10-24 01:47:28 -0300
 categories: solidity
 ---
-This is an introduction to the [solidity-abi-encoder](https://github.com/refeco/solidity-abi-encoder) repo, you can find it through the following channels:
-- [Metacpan](https://metacpan.org/pod/REFECO::Blockchain::Contract::Solidity::ABI::Encoder)
-- [Github](https://github.com/refeco/solidity-abi-encoder)
+This is an introduction to the [perl-ABI](https://github.com/refeco/perl-ABI) repo, you can find it through the following channels:
+- [Metacpan](https://metacpan.org/pod/REFECO::Blockchain::Contract::Solidity::ABI)
+- [Github](https://github.com/refeco/perl-ABI)
 
 Before proceed, I would recommend you to read the [contract ABI specification](https://docs.soliditylang.org/en/v0.8.17/abi-spec.html)
 
